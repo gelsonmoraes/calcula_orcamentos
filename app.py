@@ -9,7 +9,7 @@ st.title("Calculadora de Orçamento")
 
 #Definição das páginas
 
-mao_de_obra = st.Page("pages/1_Mao_de_Obra.py", title="Mão de Obra", icon="👷🏾")
+mao_de_obra = st.Page("pages/1_Mao_de_obra.py", title="Mão de Obra", icon="👷🏾")
 materiais = st.Page("pages/2_Materiais.py", title="Materiais", icon="🧱")
 tecidos = st.Page("pages/3_Tecidos.py", title="Tecidos", icon="🧵")
 pecas = st.Page("pages/4_Pecas.py", title="Peças", icon="🧩")
