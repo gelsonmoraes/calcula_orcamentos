@@ -216,7 +216,7 @@ if edit_mode:
     if custos:
         st.write(f"**Materiais:** R$ {custos['custo_materiais']:.2f}")
         st.write(f"**Tecidos:** R$ {custos['custo_tecidos']:.2f}")
-        st.write(f"**Mão de Obra:** R$ {custos['custo_mao_de_obra']:.2f}")
+       # st.write(f"**Mão de Obra:** R$ {custos['custo_mao_de_obra']:.2f}")
         st.write(f"**Custo Total:** R$ {custos['custo_total']:.2f}")
 
         st.markdown(f"## 💰 **Preço Sugerido: R$ {custos['preco_sugerido']:.2f}**")

@@ -374,10 +374,12 @@ def compute_peca_cost(peca_id):
     if not peca:
         return None
 
+    # Carregar configs (mesmo que não sejam usadas)
     cfg = carregar_configuracoes()
-    valor_hora = cfg["valor_hora"]
-    margem = cfg["margem"]
+    valor_hora = cfg["valor_hora"]   # ignorado pelo novo cálculo
+    margem = cfg["margem"]           # ignorado pelo novo cálculo
 
+    # Materiais e tecidos utilizados
     materiais = materiais_da_peca(peca_id)
     tecidos = tecidos_da_peca(peca_id)
 
@@ -387,32 +389,29 @@ def compute_peca_cost(peca_id):
     conn = get_connection()
     cur = conn.cursor()
 
-    # custo proporcional dos materiais
-    for mid, qtd, _ in materiais:
+    # Cálculo do custo dos materiais
+    for mid, qtd, nome in materiais:
         cur.execute("SELECT custo_total, quantidade_adquirida FROM materiais WHERE id_material=?", (mid,))
         ctotal, qadq = cur.fetchone()
         custo_materiais += (ctotal / qadq) * qtd
 
-    # custo proporcional dos tecidos
-    for tid, area, _ in tecidos:
+    # Cálculo do custo dos tecidos
+    for tid, area, nome in tecidos:
         cur.execute("SELECT custo_total, comprimento_total, largura_total FROM tecidos WHERE id_tecido=?", (tid,))
         ctotal, comp, larg = cur.fetchone()
         area_total = comp * larg
         custo_tecidos += (ctotal / area_total) * area
 
-    # custo de mão de obra
-    custo_mao = peca["tempo_producao_horas"] * valor_hora
+    # 1️⃣ NOVA FÓRMULA — SEM MÃO DE OBRA
+    custo_total = custo_materiais + custo_tecidos
 
-    # soma total
-    custo_total = custo_materiais + custo_tecidos + custo_mao
-
-    # preço sugerido com margem de lucro
-    preco_final = custo_total * (1 + margem / 100)
+    # 2️⃣ NOVA FÓRMULA — PREÇO SUGERIDO
+    preco_sugerido = custo_total / 0.44 if custo_total > 0 else 0
 
     return {
         "custo_materiais": custo_materiais,
         "custo_tecidos": custo_tecidos,
-        "custo_mao_de_obra": custo_mao,
+        "custo_mao_de_obra": 0,   # não usado mais, mantido para compatibilidade visual
         "custo_total": custo_total,
-        "preco_sugerido": preco_final,
+        "preco_sugerido": preco_sugerido,
     }
