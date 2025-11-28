@@ -57,10 +57,14 @@ st.markdown(f"**Mostrando {start+1} — {min(end, total)} de {total} materiais**
 if df_page.empty:
     st.info("Nenhum material encontrado.")
 else:
-    st.table(df_page.rename(columns={
-        "ID":"ID","Nome":"Nome","Unidade":"Unidade",
-        "Quantidade adquirida":"Qtd adquirida","Custo (R$)":"Custo (R$)"
+    df_page_display = df_page.drop(columns=["ID"])
+    st.table(df_page_display.rename(columns={
+        "Nome": "Nome",
+        "Unidade": "Unidade",
+        "Quantidade adquirida": "Qtd adquirida",
+        "Custo (R$)": "Custo (R$)"
     }))
+
 
 st.divider()
 

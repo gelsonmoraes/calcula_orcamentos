@@ -19,6 +19,9 @@ st.divider()
 # 🔄 Carregar tecidos em DataFrame
 # ========================================================
 tecidos = listar_tecidos()
+
+
+
 df = pd.DataFrame(tecidos, columns=[
     "ID", "Nome", "Comprimento total (cm)", "Largura total (cm)", "Custo (R$)"
 ])
@@ -31,7 +34,9 @@ st.subheader("📦 Tecidos cadastrados")
 if df.empty:
     st.info("Nenhum tecido cadastrado ainda.")
 else:
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    df_display = df.drop(columns=["ID"])
+    st.dataframe(df_display, use_container_width=True, hide_index=True)
+
 
 st.divider()
 
@@ -45,21 +50,21 @@ with st.form("form_novo_tecido"):
 
     comprimento_total = st.number_input(
         "Comprimento total adquirido (cm)",
-        min_value=1.0,
-        step=1.0,
+        min_value=50.0,
+        step=10.0,
         format="%.1f"
     )
 
     largura_total = st.number_input(
         "Largura total adquirida (cm)",
-        min_value=1.0,
-        step=1.0,
+        min_value=50.0,
+        step=10.0,
         format="%.1f"
     )
 
     custo = st.number_input(
         "Custo total (R$)",
-        min_value=0.0,
+        min_value=0.00,
         step=1.0,
         format="%.2f"
     )
@@ -99,23 +104,23 @@ else:
 
         novo_comprimento = st.number_input(
             "Comprimento total adquirido (cm)",
-            min_value=1.0,
-            step=1.0,
+            min_value=50.0,
+            step=10.0,
             value=float(dados["Comprimento total (cm)"]),
             format="%.1f"
         )
 
         nova_largura = st.number_input(
             "Largura total adquirida (cm)",
-            min_value=1.0,
-            step=1.0,
+            min_value=50.0,
+            step=10.0,
             value=float(dados["Largura total (cm)"]),
             format="%.1f"
         )
 
         novo_custo = st.number_input(
             "Custo total (R$)",
-            min_value=0.0,
+            min_value=0.00,
             step=1.0,
             value=float(dados["Custo (R$)"]),
             format="%.2f"

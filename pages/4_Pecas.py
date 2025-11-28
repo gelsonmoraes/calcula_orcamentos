@@ -12,10 +12,10 @@ st.subheader("📋 Peças Cadastradas")
 
 if pecas:
     for p in pecas:
-        st.markdown(f"**{p[1]}** — Tempo: {p[2]}h — Preço Sugerido: R$ {p[3]:.2f}")
+        preco = p[3] if p[3] is not None else 0
+        st.markdown(f"**{p[1]}** — Tempo: {p[2]}h — Preço Sugerido: R$ {preco:.2f}")
 else:
     st.info("Nenhuma peça cadastrada ainda.")
-
 
 st.divider()
 st.subheader("➕ Cadastrar / ✏️ Editar Peça")
@@ -30,7 +30,6 @@ peca_escolhida = st.selectbox(
 # Carregar dados da peça selecionada
 # ------------------------------------------
 edit_mode = False
-peca_data = None
 
 if peca_escolhida != "Nova peça":
     edit_mode = True
@@ -46,7 +45,6 @@ else:
     dados_peca = None
     mats_usados = []
     tec_usados = []
-
 
 # ------------------------------------------
 # Formulário de cadastro / edição
@@ -64,9 +62,12 @@ tempo = st.number_input(
     value=dados_peca["tempo_producao_horas"] if edit_mode else 1.0
 )
 
-
+# ----------------------------
+# Materiais usados
+# ----------------------------
 st.write("### Materiais usados")
 materiais_map = {m[1]: m for m in materiais}
+
 sel_mats = st.multiselect(
     "Selecione os materiais",
     list(materiais_map.keys()),
@@ -76,12 +77,20 @@ sel_mats = st.multiselect(
 quant_mats = {}
 for nome_mat in sel_mats:
     mat = materiais_map[nome_mat]
-    quant = st.number_input(f"Qtd usada de {nome_mat} ({mat[2]})", min_value=0.01, step=0.01)
+    quant = st.number_input(
+        f"Qtd usada de {nome_mat} ({mat[2]})",
+        min_value=0.01, step=0.01,
+        value=next((x[1] for x in mats_usados if x[2] == nome_mat), 1.0),
+        key=f"mat_{mat[0]}"
+    )
     quant_mats[mat[0]] = quant
 
-
+# ----------------------------
+# Tecidos usados
+# ----------------------------
 st.write("### Tecidos usados")
 tecidos_map = {t[1]: t for t in tecidos}
+
 sel_tecs = st.multiselect(
     "Selecione os tecidos",
     list(tecidos_map.keys()),
@@ -91,11 +100,30 @@ sel_tecs = st.multiselect(
 area_tecs = {}
 for nome_tec in sel_tecs:
     t = tecidos_map[nome_tec]
-    area = st.number_input(
-        f"Área usada do tecido {nome_tec} (cm²)",
-        min_value=1.0, step=1.0
+    tid = t[0]
+
+    st.write(f"📐 Medidas do tecido **{nome_tec}**:")
+
+    colA, colB = st.columns(2)
+
+    comp_usado = colA.number_input(
+        "Comprimento usado (cm)",
+        min_value=0.1,
+        value=1.0,
+        key=f"comp_{tid}"
     )
-    area_tecs[t[0]] = area
+
+    larg_usado = colB.number_input(
+        "Largura usada (cm)",
+        min_value=0.1,
+        value=1.0,
+        key=f"larg_{tid}"
+    )
+
+    area = comp_usado * larg_usado
+    area_tecs[tid] = area
+
+    st.caption(f"➡ Área calculada: **{area:.2f} cm²**")
 
 
 # ------------------------------------------
@@ -104,39 +132,49 @@ for nome_tec in sel_tecs:
 col1, col2, col3 = st.columns(3)
 
 if col1.button("💾 Salvar Peça"):
+
+    # 1️⃣ VERIFICAR NOME DUPLICADO
+    nomes_existentes = [p[1] for p in pecas]
+    if (not edit_mode and nome in nomes_existentes) or \
+       (edit_mode and nome in nomes_existentes and nome != dados_peca["nome_peca"]):
+        st.error("Já existe uma peça com este nome. Escolha outro nome.")
+        st.stop()
+
     if not edit_mode:
         # Criar nova peça
         novo_id = db.inserir_peca(nome, tempo)
         db.limpar_relacoes_peca(novo_id)
 
-        # Salvar materiais
         for mid, qtd in quant_mats.items():
             db.adicionar_material_na_peca(novo_id, mid, qtd)
 
-        # Salvar tecidos
         for tid, area in area_tecs.items():
             db.adicionar_tecido_na_peca(novo_id, tid, area)
 
-        st.success("Peça cadastrada com sucesso! Atualize a página.")
+        # 2️⃣ CALCULAR e SALVAR preço sugerido
+        custos = db.compute_peca_cost(novo_id)
+        db.salvar_preco_sugerido(novo_id, custos["preco_sugerido"])
+
+        st.success(f"Peça **{nome}** cadastrada com sucesso!")
+        st.markdown(f"### 💰 Preço sugerido: **R$ {custos['preco_sugerido']:.2f}**")
+
     else:
         # Atualizar peça existente
         db.atualizar_peca(peca_id, nome, tempo)
         db.limpar_relacoes_peca(peca_id)
 
-        # Regravar materiais
         for mid, qtd in quant_mats.items():
             db.adicionar_material_na_peca(peca_id, mid, qtd)
 
-        # Regravar tecidos
         for tid, area in area_tecs.items():
             db.adicionar_tecido_na_peca(peca_id, tid, area)
 
-        st.success("Peça atualizada! Atualize a página.")
+        # 2️⃣ CALCULAR e SALVAR preço sugerido
+        custos = db.compute_peca_cost(peca_id)
+        db.salvar_preco_sugerido(peca_id, custos["preco_sugerido"])
 
-
-if edit_mode and col2.button("🗑️ Excluir Peça"):
-    db.excluir_peca(peca_id)
-    st.warning("Peça excluída! Atualize a página.")
+        st.success(f"Peça **{nome}** atualizada com sucesso!")
+        st.markdown(f"### 💰 Preço sugerido: **R$ {custos['preco_sugerido']:.2f}**")
 
 
 # ------------------------------------------

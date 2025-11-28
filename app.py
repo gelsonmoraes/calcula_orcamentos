@@ -2,7 +2,6 @@ import streamlit as st
 
 #Congfiguração da página principal
 st.set_page_config(page_title="Calculadora de Orçamento", layout="wide")
-st.title("Calculadora de Orçamento")
 
 # Inicia banco de dados
 # init_db()
@@ -17,5 +16,4 @@ pecas = st.Page("pages/4_Pecas.py", title="Peças", icon="🧩")
 pg = st.navigation(pages=[mao_de_obra, materiais, tecidos, pecas])
 st.sidebar.caption("Calculadora de Orçamento")
 
-st.write("Selecione uma página no menu lateral para começar.")
 pg.run()
