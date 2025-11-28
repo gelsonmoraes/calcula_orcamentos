@@ -13,7 +13,7 @@ materiais = st.Page("pages/2_Materiais.py", title="Materiais", icon="🧱")
 tecidos = st.Page("pages/3_Tecidos.py", title="Tecidos", icon="🧵")
 pecas = st.Page("pages/4_Pecas.py", title="Peças", icon="🧩")
 
-pg = st.navigation(pages=[mao_de_obra, materiais, tecidos, pecas])
+pg = st.navigation(pages=[materiais, tecidos, pecas])
 st.sidebar.caption("Calculadora de Orçamento")
 
 pg.run()
