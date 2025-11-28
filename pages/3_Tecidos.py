@@ -20,8 +20,6 @@ st.divider()
 # ========================================================
 tecidos = listar_tecidos()
 
-
-
 df = pd.DataFrame(tecidos, columns=[
     "ID", "Nome", "Comprimento total (cm)", "Largura total (cm)", "Custo (R$)"
 ])
@@ -37,7 +35,6 @@ else:
     df_display = df.drop(columns=["ID"])
     st.dataframe(df_display, use_container_width=True, hide_index=True)
 
-
 st.divider()
 
 # ========================================================
@@ -50,22 +47,25 @@ with st.form("form_novo_tecido"):
 
     comprimento_total = st.number_input(
         "Comprimento total adquirido (cm)",
-        min_value=50.0,
-        step=10.0,
+        min_value=1.0,
+        step=1.0,
+        value=100.0,
         format="%.1f"
     )
 
     largura_total = st.number_input(
         "Largura total adquirida (cm)",
-        min_value=50.0,
-        step=10.0,
+        min_value=1.0,
+        step=1.0,
+        value=100.0,
         format="%.1f"
     )
 
     custo = st.number_input(
         "Custo total (R$)",
-        min_value=0.00,
+        min_value=0.0,
         step=1.0,
+        value=0.0,
         format="%.2f"
     )
 
@@ -78,7 +78,7 @@ if submit_novo:
         st.error("Já existe um tecido com este nome.")
     else:
         inserir_tecido(nome_tecido, comprimento_total, largura_total, custo)
-        st.success("Tecido cadastrado com sucesso! 🎉")
+        st.success(f"Tecido **{nome_tecido}** cadastrado com sucesso! 🎉")
         st.rerun()
 
 st.divider()
@@ -99,30 +99,35 @@ else:
     dados = df[df["Nome"] == tecido_escolhido].iloc[0]
     id_t = int(dados["ID"])
 
+    # Garantir valores mínimos válidos
+    valor_comp = max(float(dados["Comprimento total (cm)"]), 1.0)
+    valor_larg = max(float(dados["Largura total (cm)"]), 1.0)
+    valor_custo = max(float(dados["Custo (R$)"]), 0.0)
+
     with st.form("form_editar_tecido"):
         novo_nome = st.text_input("Nome do tecido", value=dados["Nome"]).strip()
 
         novo_comprimento = st.number_input(
             "Comprimento total adquirido (cm)",
-            min_value=50.0,
-            step=10.0,
-            value=float(dados["Comprimento total (cm)"]),
+            min_value=1.0,
+            step=1.0,
+            value=valor_comp,
             format="%.1f"
         )
 
         nova_largura = st.number_input(
             "Largura total adquirida (cm)",
-            min_value=50.0,
-            step=10.0,
-            value=float(dados["Largura total (cm)"]),
+            min_value=1.0,
+            step=1.0,
+            value=valor_larg,
             format="%.1f"
         )
 
         novo_custo = st.number_input(
             "Custo total (R$)",
-            min_value=0.00,
+            min_value=0.0,
             step=1.0,
-            value=float(dados["Custo (R$)"]),
+            value=valor_custo,
             format="%.2f"
         )
 
@@ -135,7 +140,7 @@ else:
             st.error("Já existe um tecido com este nome.")
         else:
             atualizar_tecido(id_t, novo_nome, novo_comprimento, nova_largura, novo_custo)
-            st.success("Tecido atualizado com sucesso! ✨")
+            st.success(f"Tecido **{novo_nome}** atualizado com sucesso! ✨")
             st.rerun()
 
 st.divider()
@@ -158,5 +163,5 @@ else:
 
     if st.button("Excluir tecido", type="primary", use_container_width=True):
         excluir_tecido(id_excluir)
-        st.success("Tecido excluído com sucesso! 🗑️")
+        st.success(f"Tecido **{tecido_excluir}** excluído com sucesso! 🗑️")
         st.rerun()

@@ -125,15 +125,15 @@ for nome_tec in sel_tecs:
 
     st.caption(f"➡ Área calculada: **{area:.2f} cm²**")
 
-
 # ------------------------------------------
 # Botões de ação
 # ------------------------------------------
 col1, col2, col3 = st.columns(3)
 
+# SALVAR PEÇA
 if col1.button("💾 Salvar Peça"):
 
-    # 1️⃣ VERIFICAR NOME DUPLICADO
+    # 1️⃣ validar nome duplicado
     nomes_existentes = [p[1] for p in pecas]
     if (not edit_mode and nome in nomes_existentes) or \
        (edit_mode and nome in nomes_existentes and nome != dados_peca["nome_peca"]):
@@ -151,12 +151,12 @@ if col1.button("💾 Salvar Peça"):
         for tid, area in area_tecs.items():
             db.adicionar_tecido_na_peca(novo_id, tid, area)
 
-        # 2️⃣ CALCULAR e SALVAR preço sugerido
         custos = db.compute_peca_cost(novo_id)
         db.salvar_preco_sugerido(novo_id, custos["preco_sugerido"])
 
         st.success(f"Peça **{nome}** cadastrada com sucesso!")
         st.markdown(f"### 💰 Preço sugerido: **R$ {custos['preco_sugerido']:.2f}**")
+        st.rerun()
 
     else:
         # Atualizar peça existente
@@ -169,12 +169,39 @@ if col1.button("💾 Salvar Peça"):
         for tid, area in area_tecs.items():
             db.adicionar_tecido_na_peca(peca_id, tid, area)
 
-        # 2️⃣ CALCULAR e SALVAR preço sugerido
         custos = db.compute_peca_cost(peca_id)
         db.salvar_preco_sugerido(peca_id, custos["preco_sugerido"])
 
         st.success(f"Peça **{nome}** atualizada com sucesso!")
         st.markdown(f"### 💰 Preço sugerido: **R$ {custos['preco_sugerido']:.2f}**")
+        st.rerun()
+
+# ------------------------------------------
+# EXCLUIR PEÇA (correção com session_state)
+# ------------------------------------------
+if edit_mode:
+    if "confirmar_exclusao" not in st.session_state:
+        st.session_state.confirmar_exclusao = False
+
+    if col2.button("🗑️ Excluir Peça"):
+        st.session_state.confirmar_exclusao = True
+        st.session_state.peca_excluir_id = peca_id
+        st.session_state.peca_excluir_nome = nome
+
+    if st.session_state.confirmar_exclusao:
+        st.warning(f"Tem certeza que deseja excluir a peça **{st.session_state.peca_excluir_nome}**?")
+        if st.button("Confirmar exclusão ❗"):
+            db.excluir_peca(st.session_state.peca_excluir_id)
+            st.success("Peça excluída com sucesso! 🗑️")
+
+            # Limpa estado
+            st.session_state.confirmar_exclusao = False
+
+            st.rerun()
+
+        if st.button("Cancelar"):
+            st.session_state.confirmar_exclusao = False
+            st.rerun()
 
 
 # ------------------------------------------

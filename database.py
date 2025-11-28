@@ -281,11 +281,21 @@ def atualizar_peca(peca_id, nome, tempo):
 
 def excluir_peca(peca_id):
     conn = get_connection()
-    conn.execute("DELETE FROM pecas WHERE id_peca=?", (peca_id,))
-    conn.execute("DELETE FROM pecas_materiais WHERE peca_id=?", (peca_id,))
-    conn.execute("DELETE FROM pecas_tecidos WHERE peca_id=?", (peca_id,))
+    cur = conn.cursor()
+
+    # Apagar relações com materiais
+    cur.execute("DELETE FROM pecas_materiais WHERE peca_id=?", (peca_id,))
+
+    # Apagar relações com tecidos
+    cur.execute("DELETE FROM pecas_tecidos WHERE peca_id=?", (peca_id,))
+
+    # Apagar a peça
+    cur.execute("DELETE FROM pecas WHERE id_peca=?", (peca_id,))
+
     conn.commit()
     conn.close()
+
+
 
 
 def salvar_preco_sugerido(peca_id, preco):
